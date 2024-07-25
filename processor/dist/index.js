@@ -30,11 +30,12 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             catch (error) {
                 console.log("error while conecting to the message Distributibng service", error);
             }
-            const zapRunsOutboxes = yield client.zapRunOutbox.findMany({
+            const pendingRows = yield client.zapRunOutbox.findMany({
+                where: {},
                 take: batchSize,
             });
             //prepare mesasage
-            const messages = zapRunsOutboxes.map((data) => ({
+            const messages = pendingRows.map((data) => ({
                 value: JSON.stringify(data),
             }));
             const response = yield producer.send({
@@ -45,7 +46,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             const deleteresponse = yield client.zapRunOutbox.deleteMany({
                 where: {
                     id: {
-                        in: zapRunsOutboxes.map((oneZapRunOutBox) => oneZapRunOutBox.id),
+                        in: pendingRows.map((oneZapRunOutBox) => oneZapRunOutBox.id),
                     },
                 },
             });

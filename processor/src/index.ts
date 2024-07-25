@@ -25,11 +25,12 @@ const run = async () => {
         );
       }
 
-      const zapRunsOutboxes = await client.zapRunOutbox.findMany({
+      const pendingRows = await client.zapRunOutbox.findMany({
+        where: {},
         take: batchSize,
       });
       //prepare mesasage
-      const messages = zapRunsOutboxes.map((data) => ({
+      const messages = pendingRows.map((data) => ({
         value: JSON.stringify(data),
       }));
       const response = await producer.send({
@@ -40,7 +41,7 @@ const run = async () => {
       const deleteresponse = await client.zapRunOutbox.deleteMany({
         where: {
           id: {
-            in: zapRunsOutboxes.map((oneZapRunOutBox) => oneZapRunOutBox.id),
+            in: pendingRows.map((oneZapRunOutBox) => oneZapRunOutBox.id),
           },
         },
       });
