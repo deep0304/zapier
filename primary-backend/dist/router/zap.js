@@ -20,12 +20,9 @@ const db_1 = require("../db");
 const router = express_1.default.Router();
 router.post("/", authMiddleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
-    console.log("body ", body);
     //@ts-ignore
     const id = req.id;
-    console.log("id: ", id);
     const parsedData = types_1.zapCreateSchema.safeParse(body);
-    console.log("parsedData : ", parsedData.data ? parsedData.data.actions : "actions not found");
     if (!parsedData.success) {
         return res.json({
             message: "Zap not created , something went wrong",
@@ -61,9 +58,6 @@ router.post("/", authMiddleware_1.authMiddleware, (req, res) => __awaiter(void 0
                     data: {
                         triggerId: associatedTrigger.id,
                     },
-                    include: {
-                        actions: true,
-                    },
                 });
                 console.log("updated Zap: ", updatedZap);
                 return updatedZap.id;
@@ -87,6 +81,18 @@ router.get("/", authMiddleware_1.authMiddleware, (req, res) => __awaiter(void 0,
             where: {
                 userId: userId,
             },
+            include: {
+                trigger: {
+                    include: {
+                        type: true,
+                    },
+                },
+                actions: {
+                    include: {
+                        type: true,
+                    },
+                },
+            },
         });
         return res.status(200).json(allZaps);
     }
@@ -96,15 +102,28 @@ router.get("/", authMiddleware_1.authMiddleware, (req, res) => __awaiter(void 0,
 }));
 router.get("/:zapId", authMiddleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
+    const userId = req.id;
     const zapId = req.params.zapId;
     console.log("zap ID : ", zapId);
     try {
         const zapResponse = yield db_1.prismaClient.zap.findUnique({
             where: {
                 id: zapId,
+                userId: userId,
+            },
+            include: {
+                trigger: {
+                    include: {
+                        type: true,
+                    },
+                },
+                actions: {
+                    include: {
+                        type: true,
+                    },
+                },
             },
         });
-        console.log("zapRespnse: ", zapResponse);
         if (!zapResponse) {
             return res.status(411).json({
                 message: "the zap not found",

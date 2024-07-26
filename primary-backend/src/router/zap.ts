@@ -43,9 +43,6 @@ router.post("/", authMiddleware, async (req, res) => {
           data: {
             triggerId: associatedTrigger.id,
           },
-          include: {
-            actions: true,
-          },
         });
         console.log("updated Zap: ", updatedZap);
         return updatedZap.id;
@@ -68,6 +65,18 @@ router.get("/", authMiddleware, async (req, res) => {
       where: {
         userId: userId,
       },
+      include: {
+        trigger: {
+          include: {
+            type: true,
+          },
+        },
+        actions: {
+          include: {
+            type: true,
+          },
+        },
+      },
     });
     return res.status(200).json(allZaps);
   } catch (error) {
@@ -76,12 +85,26 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 router.get("/:zapId", authMiddleware, async (req, res) => {
   //@ts-ignore
+  const userId = req.id;
   const zapId = req.params.zapId;
   console.log("zap ID : ", zapId);
   try {
     const zapResponse = await prismaClient.zap.findUnique({
       where: {
         id: zapId,
+        userId: userId,
+      },
+      include: {
+        trigger: {
+          include: {
+            type: true,
+          },
+        },
+        actions: {
+          include: {
+            type: true,
+          },
+        },
       },
     });
     if (!zapResponse) {
