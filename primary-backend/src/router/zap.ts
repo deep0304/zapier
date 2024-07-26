@@ -15,8 +15,8 @@ router.post("/", authMiddleware, async (req, res) => {
     });
   } else {
     try {
-      await prismaClient.$transaction(async (tx) => {
-        const zap = await prismaClient.zap.create({
+      const zapId = await prismaClient.$transaction(async (tx) => {
+        const zap = await tx.zap.create({
           data: {
             triggerId: "",
             userId: parseInt(id),
@@ -28,36 +28,74 @@ router.post("/", authMiddleware, async (req, res) => {
             },
           },
         });
-        const associatedTrigger = await prismaClient.trigger.create({
+        console.log("zap: ", zap);
+        const associatedTrigger = await tx.trigger.create({
           data: {
             zapId: zap.id,
             triggerId: parsedData.data.availableTriggerId,
           },
         });
-        await prismaClient.zap.update({
+        console.log("associated Trigger ", associatedTrigger);
+        const updatedZap = await tx.zap.update({
           where: {
             id: zap.id,
           },
           data: {
             triggerId: associatedTrigger.id,
           },
+          include: {
+            actions: true,
+          },
         });
-        return zap.id;
+        console.log("updated Zap: ", updatedZap);
+        return updatedZap.id;
+      });
+      //@ts-ignore
+      return res.status(200).json({
+        message: "the zap is created with zapId",
+        zapId,
       });
     } catch (error) {
       console.log("the error while creating the zap", error);
     }
   }
 });
-router.get("/", authMiddleware, (req, res) => {
-  return res.json({
-    message: "zaps view",
-  });
+router.get("/", authMiddleware, async (req, res) => {
+  //@ts-ignore
+  const userId = req.id;
+  try {
+    const allZaps = await prismaClient.zap.findMany({
+      where: {
+        userId: userId,
+      },
+    });
+    return res.status(200).json(allZaps);
+  } catch (error) {
+    console.log("the error while finding the zaps", error);
+  }
 });
-router.get("/:zapId", authMiddleware, (req, res) => {
-  return res.json({
-    message: "zap handler",
-  });
+router.get("/:zapId", authMiddleware, async (req, res) => {
+  //@ts-ignore
+  const zapId = req.params.zapId;
+  console.log("zap ID : ", zapId);
+  try {
+    const zapResponse = await prismaClient.zap.findUnique({
+      where: {
+        id: zapId,
+      },
+    });
+    if (!zapResponse) {
+      return res.status(411).json({
+        message: "the zap not found",
+      });
+    }
+    return res.status(200).json(zapResponse);
+  } catch (error) {
+    console.log("the error while finding the details of the gievn zap", error);
+    return res.status(400).json({
+      message: "Error while findig the zap",
+    });
+  }
 });
 
 export const zapRouter = router;
