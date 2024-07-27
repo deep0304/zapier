@@ -7,9 +7,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.use("/api/user/", userRouter);
+app.use("/api/v1/user/", userRouter);
 
-app.use("/api/user/zap", zapRouter);
+app.use("/api/v1/user/zap", zapRouter);
 
 app.listen(3000, () => {
   console.log("running on the port 3000");

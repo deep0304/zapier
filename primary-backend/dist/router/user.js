@@ -32,6 +32,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
 router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const parsedData = types_1.signUpSchema.safeParse(body);
+    console.log(body);
     if (!parsedData.success) {
         return res.status(411).json({
             message: "Invalid inputs",
@@ -63,15 +64,19 @@ router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function*
                     message: "user not created ",
                 });
             }
+            const token = jsonwebtoken_1.default.sign({
+                id: response.id,
+            }, config_1.JWT_SECRET);
+            return res.status(200).json({
+                message: "user Created successfully",
+                message2: "Please verify the email",
+                token: token,
+            });
         }
         catch (error) {
             console.log("the error while the creating the user", error);
         }
         //send email
-        return res.status(200).json({
-            message: "user Created successfully",
-            message2: "Please verify the email",
-        });
     }
 }));
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {

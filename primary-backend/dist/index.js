@@ -10,8 +10,8 @@ const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
-app.use("/api/user/", user_1.userRouter);
-app.use("/api/user/zap", zap_1.zapRouter);
+app.use("/api/v1/user/", user_1.userRouter);
+app.use("/api/v1/user/zap", zap_1.zapRouter);
 app.listen(3000, () => {
     console.log("running on the port 3000");
 });

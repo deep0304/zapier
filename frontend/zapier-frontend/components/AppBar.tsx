@@ -17,13 +17,17 @@ export const AppBar = ({ signUp = true }: { signUp?: boolean }) => {
       </div>
       <div className="flex items-center p-2 mx-3 space-x-2 ">
         <LinkButton onClick={() => {}}>Contact Sales</LinkButton>
-        <LinkButton
-          onClick={() => {
-            router.push("/login");
-          }}
-        >
-          Login
-        </LinkButton>
+        {!signUp ? (
+          <LinkButton
+            onClick={() => {
+              router.push("/login");
+            }}
+          >
+            Login
+          </LinkButton>
+        ) : (
+          <div></div>
+        )}
         {signUp ? (
           <PrimaryButton
             onClick={() => {

@@ -4,19 +4,61 @@ import { PrimaryButton } from "@/components/buttons/PrimaryButton";
 import { SecondaryButton } from "@/components/buttons/SecondaryButton";
 import { Input } from "@/components/Input";
 import { SecondFeature } from "@/components/SecondFeature";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { networkInterfaces } from "os";
+import { useRef, useState } from "react";
 
 export default function () {
-  const [name, setName] = useState("");
+  const router = useRouter();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [data, setData] = useState({});
-  const loginClickHandle = () => {
-    setData({
-      name,
-      email,
-      password,
+  const usernameRef = useRef();
+  const passwordRef = useRef();
+  const emailRef = useRef();
+  const signupHandle = async () => {
+    console.log(username);
+    console.log(email);
+    console.log(password);
+    const userData = {
+      username: username,
+      email: email,
+      password: password,
+    };
+    //     if (!data) {
+    //       return router.push("/signup");
+    //     }
+    console.log(userData);
+    console.log(JSON.stringify(userData));
+    const response = await fetch("http://localhost:3000/api/v1/user/signup", {
+      method: "POST",
+      body: JSON.stringify(userData),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
+    if (!response.ok) {
+      console.log("try again please");
+    }
+    const recievedResponse = await response.json();
+    console.log(recievedResponse);
+    const token = recievedResponse.token;
+    if (!token) {
+      alert("try again something went wrong");
+      router.push("/signup");
+    }
+    await new Promise((r) => setTimeout(r, 2000));
+    localStorage.setItem("userToken", token);
+    await new Promise((r) => setTimeout(r, 2000));
+    if (token) {
+      router.push("/dashboard");
+    }
+  };
+  const resetHandle = () => {
+    setEmail("");
+    setUsername("");
+    setPassword("");
   };
   return (
     <div>
@@ -36,14 +78,16 @@ export default function () {
         <div className="pt-16 pl-40">
           <div className=" flex flex-col py-6  px-4  rounded-md border border-zinc-900">
             <Input
+              ref={usernameRef}
               label="Name"
               placeholder="Enter your name"
               //@ts-ignorec
               onChange={(e) => {
-                setName(e.target.value);
+                setUsername(e.target.value);
               }}
             />
             <Input
+              ref={emailRef}
               label="Email"
               placeholder="Enter your Email"
               //@ts-ignorec
@@ -52,18 +96,18 @@ export default function () {
               }}
             />
             <Input
-              type="password"
+              ref={passwordRef}
               label="password"
-              placeholder="password"
+              placeholder="enter your password"
               //@ts-ignorec
               onChange={(e) => {
-                setPassword(e.target.value);
+                setEmail(e.target.value);
               }}
             />
             <div className="flex px-2 justify-between ">
               <PrimaryButton
                 onClick={() => {
-                  loginClickHandle();
+                  signupHandle();
                 }}
               >
                 Confirm
@@ -71,10 +115,7 @@ export default function () {
 
               <SecondaryButton
                 onClick={() => {
-                  setEmail("");
-                  setName("");
-                  setPassword("");
-                  setData({});
+                  resetHandle();
                 }}
               >
                 Reset
