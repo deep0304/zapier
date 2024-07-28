@@ -4,6 +4,7 @@ import { AppBar } from "@/components/AppBar";
 import { DarkButton } from "@/components/buttons/DarkButton";
 import { Popup } from "@/components/Popup";
 import { ZapLayout } from "@/components/ZapLayout";
+import { action, trigger } from "@/interfaces";
 import { useEffect, useState } from "react";
 
 export default function () {
@@ -14,29 +15,28 @@ export default function () {
       availableActionName: string;
     }[]
   >([]);
-  const [availableTriggers, setAvailableTriggers] = useState<
-    {
-      id: string;
-      name: string;
-    }[]
-  >([]);
+  const [availableTriggers, setAvailableTriggers] = useState<trigger[]>([]);
+  const [availableActions, setAvailableActions] = useState<action[]>([]);
   useEffect(() => {
     const getTriggers = async () => {
       try {
         console.log("inside the fuction");
         const token = localStorage.getItem("userToken");
-        const response = await fetch(`${BACKEND_URL}/api/v1/actions/triggers`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? token : "",
-          },
-        });
+        const response = await fetch(
+          `${BACKEND_URL}/api/v1/triggers/available`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token ? token : "",
+            },
+          }
+        );
         if (!response) {
           return console.log("triggers not recieved");
         }
         const receivedTriggers = await response.json();
-        setAvailableTriggers(receivedTriggers);
+        setAvailableTriggers(receivedTriggers.triggers);
         return;
       } catch (error) {
         console.log(
@@ -49,8 +49,37 @@ export default function () {
   }, []);
 
   useEffect(() => {
+    const run = async () => {
+      try {
+        const response = await fetch(
+          `${BACKEND_URL}/api/v1/actions/available`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(response);
+        const recievedData = await response.json();
+        setAvailableActions(recievedData.actions);
+        return;
+      } catch (error) {
+        console.log("Error while getting the actions ", error);
+        return;
+      }
+    };
+    run();
+  }, []);
+  // not affecting if removed
+  //-----------------------------------------------------
+  useEffect(() => {
     console.log("Available triggers are the : ", availableTriggers);
-  }, [availableTriggers]);
+    console.log("Available actions: ", availableActions);
+  }, [availableTriggers, availableActions]);
+  //-------------------------------------------------
+  const data = { triggers: availableTriggers, type: "trigger" };
+  const handletriggerClick = () => {};
 
   return (
     <div>
@@ -119,11 +148,3 @@ export default function () {
     </div>
   );
 }
-const data = {
-  id: "123440",
-  name: "webhooks",
-  type: "trigger",
-};
-const handletriggerClick = () => {
-  console.log("working fine");
-};
