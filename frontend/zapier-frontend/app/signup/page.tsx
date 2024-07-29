@@ -14,9 +14,9 @@ export default function () {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [data, setData] = useState({});
-  const usernameRef = useRef();
-  const passwordRef = useRef();
-  const emailRef = useRef();
+  //   const usernameRef = useRef();
+  //   const passwordRef = useRef();
+  //   const emailRef = useRef();
   const signupHandle = async () => {
     console.log(username);
     console.log(email);
@@ -29,7 +29,7 @@ export default function () {
     //     if (!data) {
     //       return router.push("/signup");
     //     }
-    console.log(userData);
+    console.log(JSON.stringify(userData));
     console.log(JSON.stringify(userData));
     const response = await fetch("http://localhost:3000/api/v1/user/signup", {
       method: "POST",
@@ -78,7 +78,6 @@ export default function () {
         <div className="pt-16 pl-40">
           <div className=" flex flex-col py-6  px-4  rounded-md border border-zinc-900">
             <Input
-              ref={usernameRef}
               label="Name"
               placeholder="Enter your name"
               //@ts-ignorec
@@ -87,7 +86,6 @@ export default function () {
               }}
             />
             <Input
-              ref={emailRef}
               label="Email"
               placeholder="Enter your Email"
               //@ts-ignorec
@@ -96,12 +94,12 @@ export default function () {
               }}
             />
             <Input
-              ref={passwordRef}
               label="password"
               placeholder="enter your password"
+              type="password"
               //@ts-ignorec
               onChange={(e) => {
-                setEmail(e.target.value);
+                setPassword(e.target.value);
               }}
             />
             <div className="flex px-2 justify-between ">

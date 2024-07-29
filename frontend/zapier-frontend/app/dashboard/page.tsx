@@ -2,7 +2,7 @@
 import { AppBar } from "@/components/AppBar";
 import { DarkButton } from "@/components/buttons/DarkButton";
 import { useEffect, useState } from "react";
-import { BACKEND_URL } from "../config";
+import { BACKEND_URL, HOOKS_URL } from "../config";
 import axios from "axios";
 import { CheckBox } from "@/components/CheckBox";
 import { LinkButton } from "@/components/buttons/LinkButton";
@@ -19,6 +19,7 @@ interface zap {
     type: {
       id: string;
       name: string;
+      image: string;
     };
   };
   actions: {
@@ -29,6 +30,7 @@ interface zap {
     type: {
       id: string;
       name: string;
+      image: string;
     };
   }[];
 }
@@ -94,20 +96,19 @@ export default function () {
     };
     run();
   }, [token]);
-  const handle = async () => {
-  try {  const response = await fetch(`${BACKEND_URL}/api/v1/zap`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? token : "",
-    },
-
-  });
-      
-  } catch (error) {
-      console.log("the error on using the create Button",error);
-  }
-  };
+//   const handle = async () => {
+//     try {
+//       const response = await fetch(`${BACKEND_URL}/api/v1/zap`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: token ? token : "",
+//         },
+//       });
+//     } catch (error) {
+//       console.log("the error on using the create Button", error);
+//     }
+//   };
 
   return (
     <div>
@@ -116,7 +117,13 @@ export default function () {
         <div className="max-w-screen-md w-full ">
           <div className="flex justify-between pr-8   ">
             <div className="text-2xl font-bold pl-6">MyZaps</div>
-            <DarkButton onClick={() => {router.push("/zap/create")}}>Create</DarkButton>
+            <DarkButton
+              onClick={() => {
+                router.push("/zap/create");
+              }}
+            >
+              Create
+            </DarkButton>
           </div>
           <div className="border-b-2 pt-4 w-full max-w-screen-2xl border-gray-100 "></div>
 
@@ -132,24 +139,24 @@ export default function () {
 function ZapTable({ zaps }: { zaps: zap[] }) {
   const router = useRouter();
   return (
-    <div className="max-w-4xl ">
+    <div className="max-w-4xl w-full ">
       <div className="flex">
         <div className="flex-1">
           <CheckBox />
         </div>
         <div className="flex-1">Name</div>
         <div className="flex-1">Last Edit</div>
-        <div className="flex-1">Running</div>
+        <div className="flex-1">Webhook Url</div>
         <div className="flex-1">GO</div>
       </div>
       <div className="">
         {zaps.map((z) => (
           <div className="flex  border-2 py-4 text-sm px-4 w-full max-w-screen-2xl border-gray-100 ">
-            <div className="flex-1 ">
-              {z.trigger.type.name}{" "}
+            <div className="flex-1 flex items-center ">
+              <img src={z.trigger.type.image} className="w-6 h-6 pr-1" />
               {z.actions.map((a) => (
-                <div>
-                  <div>{a.type.name}</div>
+                <div className="w-8 h-8 pr-1">
+                  <img src={a.type.image} />
                 </div>
               ))}
             </div>
@@ -157,7 +164,7 @@ function ZapTable({ zaps }: { zaps: zap[] }) {
               <div>{z.id}</div>
             </div>
             <div className="flex-1">Nov 12,2023</div>
-            <div className="flex-1">off/ON</div>
+            <div className="flex-1">{`${HOOKS_URL}/1/${z.id}`}</div>
             <div className="flex-1">
               <LinkButton
                 onClick={() => {

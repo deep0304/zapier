@@ -6,9 +6,11 @@ import { PublishButton } from "@/components/buttons/PublshButton";
 import { ZapLayout } from "@/components/ZapLayout";
 import useAvailableActionsAndTriggers from "@/customHooks/useAvailableActionsAndTriggers";
 import { action, trigger } from "@/interfaces";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function () {
+  const router = useRouter();
   const [selectedTrigger, setSelectedTrigger] = useState<{
     id: string;
     name: string;
@@ -18,8 +20,10 @@ export default function () {
       index: number;
       availableActionId: string;
       availableActionName: string;
+      actionMetadata: object;
     }[]
   >([]);
+
   const [selectedIndex, setSelectedIndex] = useState<null | number>(null);
   const { availableTriggers, availableActions } =
     useAvailableActionsAndTriggers();
@@ -39,27 +43,34 @@ export default function () {
       index: number;
       availableActionId: string;
       availableActionName: string;
+      actionMetadata: object;
     }[];
     selectedTrigger: { id: string; name: string };
   }) => {
-    /// ensure to select the actions and triggers before logging
-    console.log(
-      "clicked the published buttton \n selected triggers are ",
-      selectedTrigger
-    );
-    console.log("selected Actions are: ", selectedActions);
-    console.log("--------------------------------------");
     const token = localStorage.getItem("userToken");
     const actionsData = selectedActions.map((action) => ({
       availableActionId: action.availableActionId,
       sortingOrder: action.index,
+      actionMetadata: action.actionMetadata,
     }));
-    console.log("the actionDAta after mapping it ", actionsData);
+    if (!selectedTrigger || !selectedActions) {
+      return;
+    }
     try {
       const bodyData = {
         availableTriggerId: selectedTrigger.id,
+        triggerMetadata: {},
         actions: actionsData,
       };
+
+      //       // triggerMetadata: z.any().optional(),
+      //   actions: z.array(
+      //     z.object({
+      //       availableActionId: z.string(),
+      //       sortingOrder: z.number(),
+      //       actionMetadata: z.any().optional(),
+      //     })
+      //   ),
       const response = await fetch(`${BACKEND_URL}/api/v1/zap`, {
         method: "POST",
         headers: {
@@ -73,7 +84,9 @@ export default function () {
         return;
       }
       const recievedResponse = await response.json();
-      console.log(recievedResponse);
+      await new Promise((r) => setTimeout(r, 2000));
+
+      router.push("/dashboard");
       return;
     } catch (error) {
       console.log("the error while publishing the zap", error);
@@ -81,9 +94,9 @@ export default function () {
   };
 
   return (
-    <div>
+    <div className="py-4">
       <AppBar />
-      <div className="min-h-screen w-full bg-gray-200 flex flex-col justify-center">
+      <div className="min-h-screen w-full bg-stone-100 flex flex-col justify-center">
         <div className="flex justify-center">
           <div className="flex flex-col justify-center">
             <ZapLayout
@@ -113,6 +126,7 @@ export default function () {
                       index: a.length + 2,
                       availableActionId: "",
                       availableActionName: "",
+                      actionMetadata: {},
                     },
                   ]);
                 }}
@@ -152,6 +166,7 @@ export default function () {
                     index: selectedIndex,
                     availableActionName: props.name,
                     availableActionId: props.id,
+                    actionMetadata: {},
                   };
                   return newActions;
                 });
@@ -250,8 +265,11 @@ function Modal({
                           onSelect({ id: trigger.id, name: trigger.name });
                         }}
                       >
-                        <div className=" rounded-sm bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
-                          {trigger.name ? trigger.name : "Trigger"}
+                        <div className=" rounded-sm flex justify-center space-x-4 bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
+                          <div className="">
+                            <img src={trigger.image} width={35} height={35} />
+                          </div>
+                          <div>{trigger.name ? trigger.name : "Trigger"}</div>
                         </div>
                       </div>
                     )
@@ -286,8 +304,11 @@ function Modal({
                             onSelect({ id: action.id, name: action.name });
                           }}
                         >
-                          <div className=" rounded-sm bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
-                            {action.name ? action.name : "Trigger"}
+                          <div className=" rounded-sm flex justify-center space-x-4 bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
+                            <div className="">
+                              <img src={action.image} width={35} height={35} />
+                            </div>
+                            <div>{action.name ? action.name : "Trigger"}</div>
                           </div>
                         </div>
                       )
