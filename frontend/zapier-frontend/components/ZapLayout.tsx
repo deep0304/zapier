@@ -7,7 +7,7 @@ export const ZapLayout = ({
 }: {
   name: string;
   index: number;
-  onClick: () => ReactNode;
+  onClick: () => void;
 }) => {
   return (
     <div className="py-6" onClick={onClick}>

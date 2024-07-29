@@ -8,7 +8,10 @@ router.post("/", authMiddleware, async (req, res) => {
   const body = req.body;
   //@ts-ignore
   const id: string = req.id;
+  console.log("The data commint from the frontend: ", body);
   const parsedData = zapCreateSchema.safeParse(body);
+  console.log("The parseddata  : ", parsedData);
+
   if (!parsedData.success) {
     return res.json({
       message: "Zap not created , something went wrong",

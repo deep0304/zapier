@@ -2,75 +2,28 @@
 import { BACKEND_URL } from "@/app/config";
 import { AppBar } from "@/components/AppBar";
 import { DarkButton } from "@/components/buttons/DarkButton";
-import { Popup } from "@/components/Popup";
+import { PublishButton } from "@/components/buttons/PublshButton";
 import { ZapLayout } from "@/components/ZapLayout";
+import useAvailableActionsAndTriggers from "@/customHooks/useAvailableActionsAndTriggers";
 import { action, trigger } from "@/interfaces";
 import { useEffect, useState } from "react";
 
 export default function () {
-  const [selectedTrigger, setSelectedTrigger] = useState("");
+  const [selectedTrigger, setSelectedTrigger] = useState<{
+    id: string;
+    name: string;
+  }>();
   const [selectedActions, setSelectedActions] = useState<
     {
-      availabelActionId: string;
+      index: number;
+      availableActionId: string;
       availableActionName: string;
     }[]
   >([]);
-  const [availableTriggers, setAvailableTriggers] = useState<trigger[]>([]);
-  const [availableActions, setAvailableActions] = useState<action[]>([]);
-  useEffect(() => {
-    const getTriggers = async () => {
-      try {
-        console.log("inside the fuction");
-        const token = localStorage.getItem("userToken");
-        const response = await fetch(
-          `${BACKEND_URL}/api/v1/triggers/available`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token ? token : "",
-            },
-          }
-        );
-        if (!response) {
-          return console.log("triggers not recieved");
-        }
-        const receivedTriggers = await response.json();
-        setAvailableTriggers(receivedTriggers.triggers);
-        return;
-      } catch (error) {
-        console.log(
-          "the error while getting the triggers inside the effect",
-          error
-        );
-      }
-    };
-    getTriggers();
-  }, []);
+  const [selectedIndex, setSelectedIndex] = useState<null | number>(null);
+  const { availableTriggers, availableActions } =
+    useAvailableActionsAndTriggers();
 
-  useEffect(() => {
-    const run = async () => {
-      try {
-        const response = await fetch(
-          `${BACKEND_URL}/api/v1/actions/available`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        console.log(response);
-        const recievedData = await response.json();
-        setAvailableActions(recievedData.actions);
-        return;
-      } catch (error) {
-        console.log("Error while getting the actions ", error);
-        return;
-      }
-    };
-    run();
-  }, []);
   // not affecting if removed
   //-----------------------------------------------------
   useEffect(() => {
@@ -78,8 +31,54 @@ export default function () {
     console.log("Available actions: ", availableActions);
   }, [availableTriggers, availableActions]);
   //-------------------------------------------------
-  const data = { triggers: availableTriggers, type: "trigger" };
-  const handletriggerClick = () => {};
+  const handleCreateZap = async ({
+    selectedActions,
+    selectedTrigger,
+  }: {
+    selectedActions: {
+      index: number;
+      availableActionId: string;
+      availableActionName: string;
+    }[];
+    selectedTrigger: { id: string; name: string };
+  }) => {
+    /// ensure to select the actions and triggers before logging
+    console.log(
+      "clicked the published buttton \n selected triggers are ",
+      selectedTrigger
+    );
+    console.log("selected Actions are: ", selectedActions);
+    console.log("--------------------------------------");
+    const token = localStorage.getItem("userToken");
+    const actionsData = selectedActions.map((action) => ({
+      availableActionId: action.availableActionId,
+      sortingOrder: action.index,
+    }));
+    console.log("the actionDAta after mapping it ", actionsData);
+    try {
+      const bodyData = {
+        availableTriggerId: selectedTrigger.id,
+        actions: actionsData,
+      };
+      const response = await fetch(`${BACKEND_URL}/api/v1/zap`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? token : "",
+        },
+        body: JSON.stringify(bodyData),
+      });
+      if (!response) {
+        alert("Zap not published, Please try Again");
+        return;
+      }
+      const recievedResponse = await response.json();
+      console.log(recievedResponse);
+      return;
+    } catch (error) {
+      console.log("the error while publishing the zap", error);
+    }
+  };
 
   return (
     <div>
@@ -88,31 +87,10 @@ export default function () {
         <div className="flex justify-center">
           <div className="flex flex-col justify-center">
             <ZapLayout
-              name={selectedTrigger ? selectedTrigger : "Trigger"}
+              name={selectedTrigger?.name ? selectedTrigger.name : "Trigger"}
               index={1}
-              onClick={() => (
-                <div>
-                  {availableTriggers.map((trigger, index) => (
-                    <div key={index}></div>
-                  ))}
-                </div>
-              )}
+              onClick={() => setSelectedIndex(1)}
             />
-            <div className="py-4">
-              <DarkButton
-                onClick={() => {
-                  setSelectedActions((a) => [
-                    ...a,
-                    {
-                      availabelActionId: "",
-                      availableActionName: "",
-                    },
-                  ]);
-                }}
-              >
-                <div className="text-2xl">+</div>
-              </DarkButton>
-            </div>
             {selectedActions.map((action, index) => (
               <div>
                 <ZapLayout
@@ -121,28 +99,206 @@ export default function () {
                       ? action.availableActionName
                       : "Action"
                   }
-                  index={2 + index}
-                  onClick={() => <div></div>}
+                  index={action.index}
+                  onClick={() => setSelectedIndex(action.index)}
                 />
-                <div className="py-4">
-                  <DarkButton
-                    onClick={() => {
-                      setSelectedActions((a) => [
-                        ...a,
-                        {
-                          availabelActionId: "",
-                          availableActionName: "",
-                        },
-                      ]);
-                    }}
-                  >
-                    <div className="text-2xl">+</div>
-                  </DarkButton>
-                </div>
               </div>
             ))}
+            <div className="py-4">
+              <DarkButton
+                onClick={() => {
+                  setSelectedActions((a) => [
+                    ...a,
+                    {
+                      index: a.length + 2,
+                      availableActionId: "",
+                      availableActionName: "",
+                    },
+                  ]);
+                }}
+              >
+                <div className="text-2xl">+</div>
+              </DarkButton>
+            </div>
+            <PublishButton
+              onClick={() => {
+                handleCreateZap({ selectedActions, selectedTrigger });
+              }}
+            >
+              Publish Zap
+            </PublishButton>
           </div>
-          <Popup data={data} onClick={handletriggerClick} />
+        </div>
+        {selectedIndex ? (
+          <Modal
+            index={selectedIndex}
+            setSelectedIndex={setSelectedIndex}
+            availableActions={availableActions}
+            availableTriggers={availableTriggers}
+            onSelect={(props: null | { id: string; name: string }) => {
+              if (props === null) {
+                setSelectedIndex(null);
+                return;
+              }
+              if (selectedIndex === 1) {
+                setSelectedTrigger({
+                  id: props?.id,
+                  name: props?.name,
+                });
+              } else {
+                setSelectedActions((a) => {
+                  let newActions = [...a];
+                  newActions[selectedIndex - 2] = {
+                    index: selectedIndex,
+                    availableActionName: props.name,
+                    availableActionId: props.id,
+                  };
+                  return newActions;
+                });
+              }
+
+              setSelectedIndex(null);
+            }}
+          />
+        ) : (
+          <div></div>
+        )}
+      </div>
+    </div>
+  );
+}
+function Modal({
+  index,
+  setSelectedIndex,
+  availableActions,
+  availableTriggers,
+  onSelect,
+}: {
+  index: number;
+  setSelectedIndex: any;
+  availableActions?: any;
+  availableTriggers?: any;
+  onSelect: (props: null | { id: string; name: string }) => void;
+}) {
+  const actions = availableActions;
+  const triggers = availableTriggers;
+  console.log("the available actions  inside the model", actions);
+  console.log("the triggers inside the model: ", triggers);
+  return (
+    <div>
+      <div className=" overflow-y-auto overflow-x-hidden  bg-slate-200 bg-opacity-80 fixed flex z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div className="relative p-4 w-full max-w-md max-h-full">
+          <div className="relative bg-white rounded-lg shadow ">
+            <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t ">
+              {/* Indexing is correct */}
+              <h3 className="text-xl font-semibold text-gray-900 ">
+                {index === 1 ? (
+                  <div>
+                    <div>Choooe the Trigger </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div>Choooe the Actions </div>
+                  </div>
+                )}
+              </h3>
+              <button
+                onClick={() => {
+                  onSelect(null);
+                }}
+                type="button"
+                className="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                data-modal-hide="authentication-modal"
+              >
+                <svg
+                  className="w-3 h-3"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 14 14"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+                  />
+                </svg>
+                <span className="sr-only">Close modal</span>
+              </button>
+            </div>
+
+            <div className="p-4 md:p-5">
+              {triggers && index === 1 ? (
+                <div>
+                  <div
+                    className="py-2"
+                    onClick={() => {
+                      onSelect({ id: "", name: "" });
+                    }}
+                  >
+                    <div className=" rounded-sm bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
+                      {"Reset Trigger"}
+                    </div>
+                  </div>
+
+                  {triggers.map(
+                    (trigger: { id: string; name: string; image: string }) => (
+                      <div
+                        className="py-2"
+                        onClick={() => {
+                          onSelect({ id: trigger.id, name: trigger.name });
+                        }}
+                      >
+                        <div className=" rounded-sm bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
+                          {trigger.name ? trigger.name : "Trigger"}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              ) : (
+                //      {data.triggers.map((trigger) => (
+                //   <div className="py-2" onClick={onClick}>
+                //     <div className=" rounded-sm bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
+                //       {trigger.name ? trigger.name : "Trigger"}
+                //     </div>
+                //   </div>
+                // ))}
+
+                <div>
+                  <div
+                    className="py-2"
+                    onClick={() => {
+                      onSelect({ id: "", name: "" });
+                    }}
+                  >
+                    <div className=" rounded-sm bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
+                      {"Reset Action"}
+                    </div>
+                  </div>
+                  {actions ? (
+                    actions.map(
+                      (action: { id: string; name: string; image: string }) => (
+                        <div
+                          className="py-2"
+                          onClick={() => {
+                            onSelect({ id: action.id, name: action.name });
+                          }}
+                        >
+                          <div className=" rounded-sm bg-stone-50 border border-gray-500 py-2 px-16 shadow-lg">
+                            {action.name ? action.name : "Trigger"}
+                          </div>
+                        </div>
+                      )
+                    )
+                  ) : (
+                    <div></div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

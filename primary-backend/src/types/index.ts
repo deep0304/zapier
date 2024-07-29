@@ -15,6 +15,7 @@ export const zapCreateSchema = z.object({
   actions: z.array(
     z.object({
       availableActionId: z.string(),
+      sortingOrder: z.number(),
       actionMetadata: z.any().optional(),
     })
   ),
