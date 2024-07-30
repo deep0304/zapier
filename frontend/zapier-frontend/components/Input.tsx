@@ -10,8 +10,8 @@ export const Input = ({
   label: string;
   placeholder: string;
   type?: "text" | "password";
-  onChange: (e: any) => {};
-  ref: any;
+  onChange: (e: any) => void;
+  ref?: any;
 }) => {
   return (
     <div className="py-2 flex flex-col">

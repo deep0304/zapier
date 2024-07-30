@@ -44,6 +44,7 @@ model Action {
   zapId     String  
   zap       Zap     @relation(fields: [zapId], references: [id])
   actionId  String
+  actionMetadata  Json @default("{}")
   type      AvailableAction @relation(fields: [actionId], references: [id])
   sortingOrder Int    @default(0)
 }

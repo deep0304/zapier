@@ -6,7 +6,7 @@ export const PublishButton = ({
   size = "small",
 }: {
   children: ReactNode;
-  onClick: () => {};
+  onClick: () => void;
   size?: "big" | "small";
 }) => {
   return (

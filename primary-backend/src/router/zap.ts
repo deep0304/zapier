@@ -27,6 +27,7 @@ router.post("/", authMiddleware, async (req, res) => {
               create: parsedData.data.actions.map((x, index) => ({
                 actionId: x.availableActionId,
                 sortingOrder: index,
+                actionMetadata: x.actionMetadata,
               })),
             },
           },
@@ -123,25 +124,4 @@ router.get("/:zapId", authMiddleware, async (req, res) => {
     });
   }
 });
-// router.get("/actions", async (req, res) => {
-//   try {
-//     const availableActions = await prismaClient.availableAction.findMany({
-//       where: {},
-//     });
-//     if (!availableActions) {
-//       return console.log(
-//         "something went wrong while finding the available actions"
-//       );
-//     }
-//     return res.status(200).json({
-//       availableActions,
-//     });
-//   } catch (error) {
-//     console.log("The error while getting the actions"), error;
-//     return res.status(400).json({
-//       message: "error while getting the available actions",
-//     });
-//   }
-// });
-
 export const zapRouter = router;
