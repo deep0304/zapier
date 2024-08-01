@@ -53,33 +53,35 @@ const main = async () => {
         const zapRunMetadata = zapRunDetails?.metadata;
 
         if (currentAction?.type.name === "sendEmails") {
-          //     const body = parser(
-          //       (currentAction.actionMetadata as JsonObject)?.body as string,
-          //       zapRunMetadata
-          //     );
-          //     const to = parser(
-          //       (currentAction.actionMetadata as JsonObject)?.email as string,
-          //       zapRunMetadata
-          //     );
-          const to = "user@gmail.com";
-          const body = "you have recieved amount 5 sol";
+          const body = parser(
+            (currentAction.actionMetadata as JsonObject)?.body as string,
+            zapRunMetadata
+          );
+          const to = parser(
+            (currentAction.actionMetadata as JsonObject)?.email as string,
+            zapRunMetadata
+          );
+
           console.log(`Snedinf the email to ${to} awith the body ${body}`);
+          console.log("email", to);
+          console.log("body: ", body);
         }
 
         if (currentAction?.type.name === "sendSol") {
-          //     const address = parser(
-          //       (currentAction.actionMetadata as JsonObject)?.address as string,
-          //       zapRunMetadata
-          //     );
-          //     const amount = parser(
-          //       (currentAction.actionMetadata as JsonObject)?.amount as string,
-          //       zapRunMetadata
-          //     );
-          const address = "oxte53vv47f8fy34r4";
-          const amount = 5;
+          const address = parser(
+            (currentAction.actionMetadata as JsonObject)?.address as string,
+            zapRunMetadata
+          );
+          const amount = parser(
+            (currentAction.actionMetadata as JsonObject)?.amount as string,
+            zapRunMetadata
+          );
+
           console.log(
             `sending the sol to address ${address} with the amount ${amount}`
           );
+          console.log("address", address);
+          console.log("amount: ", amount);
         }
 
         const lastStage = (zapRunDetails?.zap.actions.length || 1) - 1;
