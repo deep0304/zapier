@@ -31,7 +31,7 @@ const run = async () => {
       });
       //prepare mesasage
       const messages = pendingRows.map((data) => ({
-        value: JSON.stringify(data),
+        value: JSON.stringify({ zapRunId: data.zapRunId, stage: 0 }),
       }));
       const response = await producer.send({
         topic: "ZapServices",
