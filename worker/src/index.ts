@@ -1,7 +1,10 @@
+require("dotenv").config();
 import { Kafka } from "kafkajs";
 import { PrismaClient } from "@prisma/client";
 import { JsonObject } from "@prisma/client/runtime/library";
 import { parser } from "./parser";
+import { sendEmail } from "./email";
+import { sendEth } from "./etherum";
 const client = new PrismaClient();
 const Topic = "ZapServices";
 const kafka = new Kafka({
@@ -24,7 +27,7 @@ const main = async () => {
           "---------------------start-------------------------------"
         );
         console.log("starting the processs", message.offset);
-
+        //@ts-ignore
         const parsedValue = JSON.parse(message.value.toString());
         const parsedZapRunId = parsedValue.zapRunId;
         const parsedStage = parsedValue.stage;
@@ -61,28 +64,29 @@ const main = async () => {
             (currentAction.actionMetadata as JsonObject)?.email as string,
             zapRunMetadata
           );
-
-          console.log(`Snedinf the email to ${to} awith the body ${body}`);
-          console.log("email", to);
-          console.log("body: ", body);
+          const response = await sendEmail(to, body);
+          console.log(response);
         }
 
-        if (currentAction?.type.name === "sendSol") {
-          const address = parser(
-            (currentAction.actionMetadata as JsonObject)?.address as string,
-            zapRunMetadata
-          );
-          const amount = parser(
-            (currentAction.actionMetadata as JsonObject)?.amount as string,
-            zapRunMetadata
-          );
+      //   if (currentAction?.type.name === "sendSol") {
+      // //     const address = parser(
+      // //       (currentAction.actionMetadata as JsonObject)?.address as string,
+      // //       zapRunMetadata
+      // //     );
+      // //     const amount = parser(
+      // //       (currentAction.actionMetadata as JsonObject)?.amount as string,
+      // //       zapRunMetadata
+      // //     );
 
-          console.log(
-            `sending the sol to address ${address} with the amount ${amount}`
-          );
-          console.log("address", address);
-          console.log("amount: ", amount);
-        }
+      // //     console.log(
+      // //       `sending the sol to address ${address} with the amount ${amount}`
+      // //     );
+      // //     const reseponse = await sendEth(address, amount);
+      // //     console.log(
+      // //       "the eth is send scccessfully the reciept it ",
+      // //       reseponse
+      // //     );
+      //   }
 
         const lastStage = (zapRunDetails?.zap.actions.length || 1) - 1;
         if (parsedStage !== lastStage) {

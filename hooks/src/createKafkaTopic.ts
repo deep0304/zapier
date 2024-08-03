@@ -31,4 +31,4 @@ const createTopic = async (topic: string) => {
     await admin.disconnect();
   }
 };
-createTopic("ZapServices2");
+createTopic("ZapServices");
